@@ -6,5 +6,8 @@ lib/PkgConfig.pm
 t/00-load.t
 
 script/pkg-config.pl
+t/01-script.t
+t/pc_files.tar.gz
+MANIFEST.SKIP
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)

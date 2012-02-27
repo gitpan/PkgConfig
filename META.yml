@@ -20,4 +20,4 @@ no_index:
 requires:
   Log::Fu: 0.25
   Test::More: 0
-version: 0.03_0
+version: 0.04020
