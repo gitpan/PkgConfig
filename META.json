@@ -22,7 +22,8 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "Archive::Extract" : 0,
+            "Fcntl" : 0
          }
       },
       "configure" : {
@@ -38,5 +39,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "0.04020"
+   "version" : "0.05020"
 }

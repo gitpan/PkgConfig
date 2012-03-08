@@ -1,0 +1,15 @@
+usr/local/lib
+usr/local/lib/pkgconfig
+usr/local/lib/pkgconfig/termkey.pc
+usr/local/lib/pkgconfig/gl.pc
+usr/local/lib/pkgconfig/dri.pc
+usr/local/lib/pkgconfig/codeblocks.pc
+usr/local/lib/pkgconfig/libvirt.pc
+usr/local/lib/pkgconfig/libdivecomputer.pc
+usr/local/lib/pkgconfig/cmph.pc
+usr/local/lib/pkgconfig/emeraldengine.pc
+usr/local/lib/pkgconfig/glu.pc
+usr/local/share
+usr/local/share/pkgconfig
+usr/local/share/pkgconfig/shared-mime-info.pc
+usr/local/share/pkgconfig/bcop.pc

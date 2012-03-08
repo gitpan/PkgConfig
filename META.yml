@@ -3,7 +3,8 @@ abstract: 'Pure-Perl Core-Only replacement for C<pkg-config>'
 author:
   - 'M. Nunberg <mnunberg@haskalah.org>'
 build_requires:
-  ExtUtils::MakeMaker: 0
+  Archive::Extract: 0
+  Fcntl: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
 dynamic_config: 1
@@ -20,4 +21,4 @@ no_index:
 requires:
   Log::Fu: 0.25
   Test::More: 0
-version: 0.04020
+version: 0.05020
