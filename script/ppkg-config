@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.06020';
+our $VERSION = '0.06120';
 
 require 5.005;
 
@@ -1102,6 +1102,9 @@ package itself (without dependencies).
 L<ExtUtils::PkgConfig>, a wrapper around the C<pkg-config> binary
 
 L<pkg-config|http://www.freedesktop.org/wiki/Software/pkg-config>
+
+L<http://www.openbsd.org/cgi-bin/cvsweb/src/usr.bin/pkg-config/> another 
+perl implementation of pkg-config
 
 =head1 AUTHOR & COPYRIGHT
 
