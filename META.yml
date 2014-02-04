@@ -3,12 +3,12 @@ abstract: 'Pure-Perl Core-Only replacement for C<pkg-config>'
 author:
   - 'M. Nunberg <mnunberg@haskalah.org>'
 build_requires:
-  Archive::Extract: 0
+  Archive::Tar: 0
   Fcntl: 0
 configure_requires:
   ExtUtils::MakeMaker: 0
 dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.112150'
+generated_by: 'ExtUtils::MakeMaker version 6.88, CPAN::Meta::Converter version 2.133380'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -19,6 +19,7 @@ no_index:
     - t
     - inc
 requires:
-  Log::Fu: 0.25
   Test::More: 0
-version: 0.05020
+resources:
+  repository: https://github.com/mnunberg/perl-PkgConfig.git
+version: 0.06020

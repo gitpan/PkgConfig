@@ -11,13 +11,23 @@ WriteMakefile(
       ? ('LICENSE'=> 'perl')
       : ()),
     PL_FILES            => {},
+    EXE_FILES           => [ 'script/ppkg-config', $^O ne 'MSWin32' ? 'script/pkg-config.pl' : () ],
     PREREQ_PM => {
         'Test::More' => 0,
-        'Log::Fu' => 0.25,
     },
     BUILD_REQUIRES => {
-        'Archive::Extract' => 0,
+        'Archive::Tar' => 0,
         'Fcntl' => 0
+    },
+    META_MERGE => {
+        'meta-spec' => { version => 2 },
+        resources => {
+            repository => {
+                type => 'git',
+                url  => 'https://github.com/mnunberg/perl-PkgConfig.git',
+                web  => 'https://github.com/mnunberg/perl-PkgConfig',
+            },
+        },
     },
     
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },

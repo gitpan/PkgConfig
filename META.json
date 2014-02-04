@@ -4,7 +4,7 @@
       "M. Nunberg <mnunberg@haskalah.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.112150",
+   "generated_by" : "ExtUtils::MakeMaker version 6.88, CPAN::Meta::Converter version 2.133380",
    "license" : [
       "perl_5"
    ],
@@ -22,22 +22,28 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "Archive::Extract" : 0,
-            "Fcntl" : 0
+            "Archive::Tar" : "0",
+            "Fcntl" : "0"
          }
       },
       "configure" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : 0
+            "ExtUtils::MakeMaker" : "0"
          }
       },
       "runtime" : {
          "requires" : {
-            "Log::Fu" : "0.25",
-            "Test::More" : 0
+            "Test::More" : "0"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "0.05020"
+   "resources" : {
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/mnunberg/perl-PkgConfig.git",
+         "web" : "https://github.com/mnunberg/perl-PkgConfig"
+      }
+   },
+   "version" : "0.06020"
 }

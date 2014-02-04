@@ -1,15 +1,15 @@
 Changes
-MANIFEST
-Makefile.PL
-README
+gen_multi_tests.sh
+ignore.txt
 lib/PkgConfig.pm
-t/00-load.t
-
-script/pkg-config.pl
+Makefile.PL
+MANIFEST
 MANIFEST.SKIP
-
-t/pc_files.tar.gz
-t/PkgConfigTest.pm
+PkgConfig.kpf
+README
+script/pkg-config.pl
+script/ppkg-config
+t/00-load.t
 t/01-script_detailed.t
 t/02-iterfiles-FLISTaa.t
 t/02-iterfiles-FLISTab.t
@@ -35,5 +35,8 @@ t/FLISTai
 t/FLISTaj
 t/FLISTak
 t/FLISTal
+t/iterfiles_template
+t/pc_files.tar.gz
+t/PkgConfigTest.pm
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)
