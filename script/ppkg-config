@@ -18,9 +18,9 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.06220';
+our $VERSION = '0.06320';
 
-require 5.005;
+require 5.006;
 
 use strict;
 use warnings;
@@ -226,7 +226,10 @@ sub assign_var {
                     $self->_get_pc_varname($field), $value);
     
     log_debug("EVAL", $evalstr);
-    eval $evalstr;
+    do {
+        no warnings 'uninitialized';
+        eval $evalstr;
+    };
     if($@) {
         log_err($@);
     }

@@ -20,6 +20,7 @@ no_index:
     - inc
 requires:
   Test::More: 0
+  perl: 5.006000
 resources:
   repository: https://github.com/mnunberg/perl-PkgConfig.git
-version: 0.06220
+version: 0.06320

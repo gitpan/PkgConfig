@@ -33,7 +33,8 @@
       },
       "runtime" : {
          "requires" : {
-            "Test::More" : "0"
+            "Test::More" : "0",
+            "perl" : "5.006000"
          }
       }
    },
@@ -45,5 +46,5 @@
          "web" : "https://github.com/mnunberg/perl-PkgConfig"
       }
    },
-   "version" : "0.06220"
+   "version" : "0.06320"
 }
