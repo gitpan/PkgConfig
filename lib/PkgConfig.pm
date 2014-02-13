@@ -18,12 +18,13 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.06320';
+our $VERSION = '0.06420';
 
 require 5.006;
 
 use strict;
 use warnings;
+use Config;
 use File::Spec;
 use Class::Struct; #in core since 5.004
 our $UseDebugging;
@@ -63,7 +64,7 @@ our @DEFAULT_SEARCH_PATH = qw(
 
 );
 
-my @ENV_SEARCH_PATH = split(/:/, $ENV{PKG_CONFIG_PATH} || "");
+my @ENV_SEARCH_PATH = split($Config{path_sep}, $ENV{PKG_CONFIG_PATH} || "");
 
 push @DEFAULT_SEARCH_PATH, @ENV_SEARCH_PATH;
 
@@ -411,11 +412,10 @@ sub parse_line {
 
     log_debugf("Field %s, Value %s", $field, $value);
     
+    $field = lc($field);
+    
     #perl variables can't have '.' in them:
     $field =~ s/\./DOT/g;
-    
-    
-    $field = lc($field);
     
     #remove quoutes from field names
     $field =~ s/['"]//g;
@@ -701,7 +701,10 @@ GetOptions(
     'static' => \my $UseStatic,
     'cflags' => \my $PrintCflags,
     'exists' => \my $PrintExists,
-    
+    'atleast-version=s' => \my $AtLeastVersion,
+    'exact-version=s'   => \my $ExactVersion,
+    'max-version=s'     => \my $MaxVersion,
+
     'silence-errors' => \my $SilenceErrors,
     'print-errors' => \my $PrintErrors,
     
@@ -767,7 +770,7 @@ if($WantFlags) {
 }
 
 my %pc_options;
-if($PrintExists) {
+if($PrintExists || $AtLeastVersion || $ExactVersion || $MaxVersion) {
     $pc_options{no_recurse} = 1;
 }
 
@@ -790,6 +793,31 @@ my $o = PkgConfig->find(\@FINDLIBS, %pc_options);
 if($o->errmsg) {
     print STDERR $o->errmsg unless $quiet_errors;
     exit(1);
+}
+
+if($ExactVersion) {
+    exit(2) unless $o->pkg_version eq $ExactVersion;
+}
+
+sub _is_greater_than_or_equal ($$)
+{
+    my @a = split /\./, shift;
+    my @b = split /\./, shift;
+    while(@a || @b) {
+        my $a = shift(@a) || 0;
+        my $b = shift(@b) || 0;
+        return 1 if $a > $b;
+        return 0 if $a < $b;
+    }
+    return 1;
+}
+
+if($AtLeastVersion) {
+    exit(2) unless _is_greater_than_or_equal($o->pkg_version, $AtLeastVersion);
+}
+
+if($MaxVersion) {
+    exit(2) unless _is_greater_than_or_equal($MaxVersion, $o->pkg_version);
 }
 
 if($o->print_variables) {
