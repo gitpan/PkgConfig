@@ -39,6 +39,7 @@ t/iterfiles_template
 t/pc_files.tar.gz
 t/pc_files.lock
 t/PkgConfigTest.pm
+t/file_path.t
 LICENSE
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)

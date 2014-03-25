@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.06420';
+our $VERSION = '0.07020';
 
 require 5.006;
 
@@ -59,14 +59,76 @@ our $VarClassSerial = 0;
 ### Sane Defaults                                                            ###
 ################################################################################
 our @DEFAULT_SEARCH_PATH = qw(
-    /usr/lib/pkgconfig /usr/share/pkgconfig
     /usr/local/lib/pkgconfig /usr/local/share/pkgconfig
+    /usr/lib/pkgconfig /usr/share/pkgconfig
 
 );
 
+if($^O =~ /^(gnukfreebsd|linux)$/ && -r "/etc/debian_version") {
+    if(-x "/usr/bin/dpkg-architecture") {
+        my $arch = `/usr/bin/dpkg-architecture -qDEB_HOST_MULTIARCH`;
+        @DEFAULT_SEARCH_PATH = (
+            "/usr/local/lib/$arch/pkgconfig",
+            "/usr/local/lib/pkgconfig",
+            "/usr/local/share/pkgconfig",
+            "/usr/lib/$arch/pkgconfig",
+            "/usr/lib/pkgconfig",
+            "/usr/share/pkgconfig",
+        );
+    } else {
+        # TODO: the debian 6 official pkg-config also includes
+        # /usr/local/lib/pkgconfig/x86_64-linux-gnu
+        # /usr/lib/pkgconfig/x86_64-linux-gnu    
+        # but not sure if they are used
+    }
+
+} elsif($^O eq 'linux' && -r "/etc/redhat-release") {
+
+    if(-d "/usr/lib64/pkgconfig") {
+        @DEFAULT_SEARCH_PATH = qw(
+            /usr/lib64/pkgconfig
+            /usr/share/pkgconfig
+        );
+    } else {
+        @DEFAULT_SEARCH_PATH = qw(
+            /usr/lib/pkgconfig
+            /usr/share/pkgconfig
+        );
+    }
+
+} elsif($^O eq 'freebsd') {
+
+    # TODO: FreeBSD 10's version of pkg-config does not
+    # support PKG_CONFIG_DEBUG_SPEW so I can't verify
+    # the path there, but this is what it is for
+    # FreeBSD 9
+    @DEFAULT_SEARCH_PATH = qw(
+        /usr/local/libdata/pkgconfig
+        /usr/local/lib/pkgconfig
+    );
+
+} elsif($^O eq 'netbsd') {
+
+    @DEFAULT_SEARCH_PATH = qw(
+        /usr/pkg/lib/pkgconfig
+        /usr/pkg/share/pkgconfig
+        /usr/X11R7/lib/pkgconfig
+        /usr/lib/pkgconfig
+    );
+} elsif($^O eq 'openbsd') {
+
+    @DEFAULT_SEARCH_PATH = qw(
+        /usr/lib/pkgconfig
+        /usr/local/lib/pkgconfig
+        /usr/local/share/pkgconfig
+        /usr/X11R6/lib/pkgconfig
+        /usr/X11R6/share/pkgconfig
+    );
+}
+
 my @ENV_SEARCH_PATH = split($Config{path_sep}, $ENV{PKG_CONFIG_PATH} || "");
 
-push @DEFAULT_SEARCH_PATH, @ENV_SEARCH_PATH;
+unshift @DEFAULT_SEARCH_PATH, @ENV_SEARCH_PATH;
 
 our @DEFAULT_EXCLUDE_CFLAGS = qw(-I/usr/include -I/usr/local/include);
 # don't include default link/search paths!
@@ -298,9 +360,22 @@ sub find {
         @libraries = ($library);
     }
     
-    foreach my $lib (@libraries) {
-        $o->recursion(0);
-        $o->find_pcfile($lib);
+    if($options{file_path}) {
+    
+        if(-r $options{file_path}) {
+            $o->recursion(1);
+            $o->parse_pcfile($options{file_path});
+            $o->recursion(0);
+        } else {
+            $o->errmsg("No such file $options{file_path}\n");
+        }
+    
+    } else {
+    
+        foreach my $lib (@libraries) {
+            $o->recursion(0);
+            $o->find_pcfile($lib);
+        }
     }
     
     return $o;
@@ -1051,7 +1126,13 @@ recognized:
 Prepend search paths in addition to the paths specified in C<$ENV{PKG_CONFIG_PATH}>
 The value is an array reference.
 
-the C<_override> variant ignores defaults (like c<PKG_CONFIG_PATH).
+the C<_override> variant ignores defaults (like C<PKG_CONFIG_PATH>).
+
+=item C<file_path>
+
+Specifies the full path of the of the .pc file that you wish to load.  It does
+not need to be in the search path (although any dependencies will need to be).
+Useful if you know the full path of the exact .pc file that you want.
 
 =item C<exclude_cflags>
 
@@ -1060,7 +1141,6 @@ the C<_override> variant ignores defaults (like c<PKG_CONFIG_PATH).
 =item C<exclude_cflags_override>
 
 =item C<exclude_ldflags_override>
-
 
 Some C<.pc> files specify default compiler and linker search paths, e.g.
 C<-I/usr/include -L/usr/lib>. Specifying them on the command line can be
@@ -1120,8 +1200,6 @@ Currently this only works with GCC-supplied C<ld> and GNU C<ld>.
 
 The order of the flags is not exactly matching to that of C<pkg-config>. From my
 own observation, it seems this module does a better job, but I might be wrong.
-
-Version checking is not yet implemented.
 
 Unlike C<pkg-config>, the scripts C<--exists> function will return nonzero if
 a package B<or> any of its dependencies are missing. This differs from the
