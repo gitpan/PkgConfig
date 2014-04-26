@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07120';
+our $VERSION = '0.07220';
 
 require 5.006;
 
@@ -67,6 +67,7 @@ our @DEFAULT_SEARCH_PATH = qw(
 if($^O =~ /^(gnukfreebsd|linux)$/ && -r "/etc/debian_version") {
     if(-x "/usr/bin/dpkg-architecture") {
         my $arch = `/usr/bin/dpkg-architecture -qDEB_HOST_MULTIARCH`;
+        chomp $arch;
         @DEFAULT_SEARCH_PATH = (
             "/usr/local/lib/$arch/pkgconfig",
             "/usr/local/lib/pkgconfig",
@@ -1221,7 +1222,7 @@ perl implementation of pkg-config
 
 =item Original Author: M. Nunberg
 
-=item Current maintainer: Graham Ollis E<lt>plicease@cpan.org<Egt>
+=item Current maintainer: Graham Ollis E<lt>plicease@cpan.orgE<gt>
 
 =back
 
