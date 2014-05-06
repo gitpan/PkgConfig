@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07220';
+our $VERSION = '0.07320';
 
 require 5.006;
 
@@ -125,6 +125,32 @@ if($^O =~ /^(gnukfreebsd|linux)$/ && -r "/etc/debian_version") {
         /usr/X11R6/lib/pkgconfig
         /usr/X11R6/share/pkgconfig
     );
+
+} elsif($^O eq 'MSWin32') {
+
+    # Caveats:
+    # 1. This pulls in Config,
+    #    which we don't load on non MSWin32
+    #    but it is in the core.
+    # 2. Slight semantic difference in that we are treating
+    #    Strawberry as the "system" rather than Windows, but
+    #    since pkg-config is rarely used in MSWin32, it is
+    #    better to have something that is useful rather than
+    #    worry about if it is exactly the same as other
+    #    platforms.
+    # 3. It is a little brittle in that Strawberry might 
+    #    one day change its layouts.  If it has and you are
+    #    reading this, please send a pull request or simply
+    #    let me know -plicease
+    require Config;
+    if($Config::Config{myuname} =~ /strawberry-perl/)
+    {
+        my($vol, $dir, $file) = File::Spec->splitpath($INC{"Config.pm"});
+        my @dirs = File::Spec->splitdir($dir);
+        splice @dirs, -3;
+        @DEFAULT_SEARCH_PATH = (File::Spec->catdir($vol, @dirs, qw( c lib pkgconfig )));
+    }
+
 }
 
 my @ENV_SEARCH_PATH = split($Config{path_sep}, $ENV{PKG_CONFIG_PATH} || "");
@@ -947,14 +973,6 @@ __END__
 =head1 NAME
 
 PkgConfig - Pure-Perl Core-Only replacement for C<pkg-config>
-
-=head1 NOTE
-
-The script is not actually installed yet (i haven't settled on a good name), but
-will decide based on input in a future version.
-
-Additionally, some dependencies are superficially included for debugging, and
-will be sanitized in a future 'release/stable' version.
 
 =head1 SYNOPSIS
 
