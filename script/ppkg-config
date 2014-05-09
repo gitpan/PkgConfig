@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07320';
+our $VERSION = '0.07420';
 
 require 5.006;
 
@@ -26,6 +26,7 @@ use strict;
 use warnings;
 use Config;
 use File::Spec;
+use File::Glob 'bsd_glob';
 use Class::Struct; #in core since 5.004
 our $UseDebugging;
 
@@ -675,6 +676,22 @@ sub get_ldflags {
     return @ret;
 }
 
+sub get_list {
+    my $self = shift;
+    my @search_paths = @{$self->search_path};
+    my @rv = ();
+    $self->recursion(0);
+    for my $d (@search_paths) {
+        next unless -d $d;
+        for my $pc (bsd_glob("$d/*.pc")) {
+            if ($pc =~ m|/([^\\\/]+)\.pc$|) {
+                $self->parse_pcfile($pc);
+                push @rv, [$1, $self->_pc_var('name') . ' - ' . $self->_pc_var('description')];
+            }
+        }
+    }
+    return @rv;
+}
 
 
 ################################################################################
@@ -800,6 +817,7 @@ GetOptions(
     'libs' => \my $PrintLibs,
     'libs-only-L' => \my $PrintLibsOnlyL,
     'libs-only-l' => \my $PrintLibsOnlyl,
+    'list-all' => \my $ListAll,
     'static' => \my $UseStatic,
     'cflags' => \my $PrintCflags,
     'exists' => \my $PrintExists,
@@ -856,8 +874,6 @@ if($PrintRealVersion) {
     exit(0);
 }
 
-my @FINDLIBS = @ARGV or die "Must specify at least one library";
-
 if($PrintErrors) {
     $quiet_errors = 0;
 }
@@ -889,7 +905,21 @@ $pc_options{print_variables} = $PrintVariables;
 $pc_options{print_values} = $PrintValues;
 $pc_options{VARS} = \%UserVariables;
 
+if($ListAll) {
+    my $o = PkgConfig->find([], %pc_options);
+    my @list = $o->get_list();
+    
+    # can't use List::Util::max as it wasn't core until Perl 5.8
+    my $max_length = 0;
+    foreach my $length (map { length $_->[0] } @list) {
+        $max_length = $length if $length > $max_length;
+    }
 
+    printf "%-${max_length}s %s\n", $_->[0], $_->[1] for @list;
+    exit(0); 
+}
+
+my @FINDLIBS = @ARGV or die "Must specify at least one library";
 my $o = PkgConfig->find(\@FINDLIBS, %pc_options);
 
 if($o->errmsg) {
@@ -1049,9 +1079,17 @@ Prints -L/-R part of "--libs". It defines library search path but without librar
 
 Prints the -l part of "--libs".
 
+=head4 --list-all
+
+List all know packages.
+
 =head4 --cflags
 
 (Also) print compiler and C preprocessor flags.
+
+=head4 --modversion
+
+Print the version of a given package.
 
 =head4 --static
 
@@ -1215,6 +1253,41 @@ paths with those discovered by invoking L<ld(1)> and L<cpp(1)>.
 
 Currently this only works with GCC-supplied C<ld> and GNU C<ld>.
 
+=head2 INSTALL
+
+The C<Makefile.PL> that comes with C<PkgConfig> can take one or more C<--script>
+options to change of the name of the script or scripts that are installed.
+
+=over 4
+
+=item --script ppkg-config
+
+This is the default and works on all platforms
+
+=item --script pkg-config.pl
+
+This is installed by default on all platforms except for Windows, where the .pl
+may confuse the shell and cause the script to be opened in a text editor.
+
+=item --script pkg-config
+
+This is the default name of the real C<pkg-config> and so you have to specifically
+enable it if you want it.
+
+=item --script none
+
+Don't install any scripts.
+
+=back
+
+Example, install all script names:
+
+ % perl Makefile.PL --script ppkg-config --script pkg-config.pl --script pkg-config
+
+Example, don't install any scripts:
+
+ % perl Makefile.PL --script none
+
 =head2 BUGS
 
 The order of the flags is not exactly matching to that of C<pkg-config>. From my
@@ -1241,6 +1314,16 @@ perl implementation of pkg-config
 =item Original Author: M. Nunberg
 
 =item Current maintainer: Graham Ollis E<lt>plicease@cpan.orgE<gt>
+
+=back
+
+Other contributors include:
+
+=over 4
+
+=item kmx
+
+=item Sanel Zukan
 
 =back
 
