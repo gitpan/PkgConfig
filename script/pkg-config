@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07420';
+our $VERSION = '0.07520';
 
 require 5.006;
 
@@ -998,11 +998,18 @@ if($PrintLibsOnlyl or ($PrintLibsOnlyl and $PrintLibsOnlyL)) {
 print "\n";
 exit(0);
 
+# workaround for
+# https://rt.cpan.org/Ticket/Display.html?id=96132&results=7cdf596d4e44d8f4ed9862124b28fd59
+sub run {
+    system $^X, __FILE__, @_;
+    exit $? >> 8
+}
+
 __END__
 
 =head1 NAME
 
-PkgConfig - Pure-Perl Core-Only replacement for C<pkg-config>
+PkgConfig - Pure-Perl Core-Only replacement for pkg-config
 
 =head1 SYNOPSIS
 
@@ -1016,7 +1023,8 @@ PkgConfig - Pure-Perl Core-Only replacement for C<pkg-config>
     # -lgmodule-2.0 -ldl -lgthread-2.0 -pthread -lrt -lglib-2.0
 
 C<pkg-config.pl> can be used as an alias for C<ppkg-config> on platforms that
-support it.
+support it.  It can also be installed as C<pkg-config> though this is not
+recomended if your system has a nativ C<pkg-config>.
 
 Compare to:
     $ pkg-config --libs --cflags --static gio-2.0
