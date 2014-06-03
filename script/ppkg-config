@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07520';
+our $VERSION = '0.07520_01';
 
 require 5.006;
 
@@ -28,9 +28,10 @@ use Config;
 use File::Spec;
 use File::Glob 'bsd_glob';
 use Class::Struct; #in core since 5.004
-our $UseDebugging;
-
 use Data::Dumper;
+use File::Basename qw( dirname );
+
+our $UseDebugging;
 
 ################################################################################
 ### Check for Log::Fu                                                        ###
@@ -146,10 +147,12 @@ if($^O =~ /^(gnukfreebsd|linux)$/ && -r "/etc/debian_version") {
     require Config;
     if($Config::Config{myuname} =~ /strawberry-perl/)
     {
-        my($vol, $dir, $file) = File::Spec->splitpath($INC{"Config.pm"});
+        my($vol, $dir, $file) = File::Spec->splitpath($^X);
         my @dirs = File::Spec->splitdir($dir);
         splice @dirs, -3;
-        @DEFAULT_SEARCH_PATH = (File::Spec->catdir($vol, @dirs, qw( c lib pkgconfig )));
+        my $path = (File::Spec->catdir($vol, @dirs, qw( c lib pkgconfig )));
+        $path =~ s{\\}{/}g;
+        @DEFAULT_SEARCH_PATH = $path;
     }
 
 }
@@ -565,7 +568,10 @@ sub parse_pcfile {
     
     #Fold lines:
     
-    foreach my $line (@lines) {
+    my $pcfiledir = dirname $pcfile;
+    $pcfiledir =~ s{\\}{/}g;
+
+    foreach my $line ("pcfiledir=$pcfiledir", @lines) {
         $self->parse_line($line, \@eval_strings);
     }
     
@@ -997,13 +1003,6 @@ if($PrintLibsOnlyl or ($PrintLibsOnlyl and $PrintLibsOnlyL)) {
 
 print "\n";
 exit(0);
-
-# workaround for
-# https://rt.cpan.org/Ticket/Display.html?id=96132&results=7cdf596d4e44d8f4ed9862124b28fd59
-sub run {
-    system $^X, __FILE__, @_;
-    exit $? >> 8
-}
 
 __END__
 

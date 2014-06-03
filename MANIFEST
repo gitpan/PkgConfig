@@ -7,6 +7,7 @@ MANIFEST
 MANIFEST.SKIP
 PkgConfig.kpf
 README
+README.win32
 script/pkg-config.pl
 script/ppkg-config
 script/pkg-config
@@ -42,7 +43,9 @@ t/pc_files.tar.gz
 t/pc_files.lock
 t/PkgConfigTest.pm
 t/file_path.t
+t/pcfiledir.t
 t/perl_version.t
 LICENSE
+win32/fixlinks.pl
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)
