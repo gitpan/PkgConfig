@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07520_01';
+our $VERSION = '0.07520_02';
 
 require 5.006;
 
@@ -170,6 +170,49 @@ our @DEFAULT_EXCLUDE_LFLAGS = qw(
     
     -R/lib -R/usr/lib -R/usr/lib64 -R/lib32 -R/lib64 -R/usr/local/lib
 );
+
+if($^O eq 'MSWin32') {
+
+    if($Config::Config{cc} =~ /cl(\.exe)?$/i)
+    {
+        @DEFAULT_EXCLUDE_LFLAGS = ();
+        @DEFAULT_EXCLUDE_CFLAGS = ();
+    }
+    else
+    {
+        @DEFAULT_EXCLUDE_LFLAGS = (
+            "-L/mingw/lib",
+            "-R/mingw/lib",
+            "-L/mingw/lib/pkgconfig/../../lib",
+            "-R/mingw/lib/pkgconfig/../../lib",
+        );
+        @DEFAULT_EXCLUDE_CFLAGS = (
+            "-I/mingw/include",
+            "-I/mingw/lib/pkgconfig/../../include",
+        );
+    }
+    
+    # See caveats above for Strawberry
+    require Config;
+    if($Config::Config{myuname} =~ /strawberry-perl/)
+    {
+        my($vol, $dir, $file) = File::Spec->splitpath($^X);
+        my @dirs = File::Spec->splitdir($dir);
+        splice @dirs, -3;
+        my $path = (File::Spec->catdir($vol, @dirs, qw( c )));
+        $path =~ s{\\}{/}g;
+        push @DEFAULT_EXCLUDE_LFLAGS, (
+            "-L$path/lib",
+            "-L$path/lib/pkgconfig/../../lib",
+            "-R$path/lib",
+            "-R$path/lib/pkgconfig/../../lib",
+        );
+        push @DEFAULT_EXCLUDE_CFLAGS, (
+            "-I$path/include",
+            "-I$path/lib/pkgconfig/../../include",
+        );
+    }
+}
 
 
 my $LD_OUTPUT_RE = qr/
@@ -1023,7 +1066,7 @@ PkgConfig - Pure-Perl Core-Only replacement for pkg-config
 
 C<pkg-config.pl> can be used as an alias for C<ppkg-config> on platforms that
 support it.  It can also be installed as C<pkg-config> though this is not
-recomended if your system has a nativ C<pkg-config>.
+recomended if your system has a native C<pkg-config>.
 
 Compare to:
     $ pkg-config --libs --cflags --static gio-2.0
