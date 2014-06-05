@@ -1,5 +1,8 @@
 Revision history for PkgConfig
 
+0.07520_04 2014-06-03
+  - windows test fix
+
 0.07520_03 2014-06-03
   - fix split on Makefile.PL --script option
 
