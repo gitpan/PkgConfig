@@ -1,5 +1,9 @@
 Revision history for PkgConfig
 
+0.07620_01 2014-06-08
+  - added get_var public acessor method
+  - support for constraints =, !=, >=, <=, >, and <
+
 0.07620 2014-06-06
   - promote to production
 

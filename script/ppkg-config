@@ -18,7 +18,7 @@ package PkgConfig::UDefs;
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07620';
+our $VERSION = '0.07620_01';
 
 require 5.006;
 
@@ -456,7 +456,19 @@ sub find {
     
         foreach my $lib (@libraries) {
             $o->recursion(0);
+            my($op,$ver);
+            ($lib,$op,$ver) = ($1,$2,PkgConfig::Version->new($3))
+                if $lib =~ /^(.*)\s+(!=|=|>=|<=|>|<)\s+(.*)$/;
             $o->find_pcfile($lib);
+            
+            if(!$o->errmsg && defined $op) {
+                $op = '==' if $op eq '=';
+                unless(eval qq{ PkgConfig::Version->new(\$o->pkg_version) $op \$ver })
+                {
+                    $o->errmsg("Requested '$lib $op $ver' but version of $lib is " . 
+                        ($o->pkg_version ? $o->pkg_version : '') . "\n");
+                }
+            }
         }
     }
     
@@ -733,6 +745,11 @@ sub get_ldflags {
     return @ret;
 }
 
+sub get_var {
+    my($self, $name) = @_;
+    $self->_pc_var($name);
+}
+
 sub get_list {
     my $self = shift;
     my @search_paths = @{$self->search_path};
@@ -838,6 +855,34 @@ sub version_check {
 
 if(caller) {
     return 1;
+}
+
+package
+    PkgConfig::Version;
+
+use overload
+    '<=>' => sub { $_[0]->cmp($_[1]) },
+    '""'  => sub { $_[0]->as_string },
+    fallback => 1;
+
+sub new {
+    my($class, $value) = @_;
+    bless [split /\./, defined $value ? $value : ''], $class;
+}
+
+sub clone {
+    __PACKAGE__->new(shift->as_string);
+}
+
+sub as_string {
+    my($self) = @_;
+    join '.', @{ $self };
+}
+
+sub cmp {
+    my($self, $other) = @_;
+    no warnings 'uninitialized';
+    defined($self->[0]) || defined($other->[0]) ? ($self->[0] <=> $other->[0]) || &cmp([@{$self}[1..$#$self]], [@{$other}[1..$#$other]]) : 0;
 }
 
 ################################################################################
@@ -977,36 +1022,20 @@ if($ListAll) {
 }
 
 my @FINDLIBS = @ARGV or die "Must specify at least one library";
+
+if($AtLeastVersion) {
+    @FINDLIBS = map { "$_ >= $AtLeastVersion" } @FINDLIBS;
+} elsif($MaxVersion) {
+    @FINDLIBS = map { "$_ <= $MaxVersion" } @FINDLIBS;
+} elsif($ExactVersion) {
+    @FINDLIBS = map { "$_ = $ExactVersion" } @FINDLIBS;
+}
+
 my $o = PkgConfig->find(\@FINDLIBS, %pc_options);
 
 if($o->errmsg) {
     print STDERR $o->errmsg unless $quiet_errors;
     exit(1);
-}
-
-if($ExactVersion) {
-    exit(2) unless $o->pkg_version eq $ExactVersion;
-}
-
-sub _is_greater_than_or_equal ($$)
-{
-    my @a = split /\./, shift;
-    my @b = split /\./, shift;
-    while(@a || @b) {
-        my $a = shift(@a) || 0;
-        my $b = shift(@b) || 0;
-        return 1 if $a > $b;
-        return 0 if $a < $b;
-    }
-    return 1;
-}
-
-if($AtLeastVersion) {
-    exit(2) unless _is_greater_than_or_equal($o->pkg_version, $AtLeastVersion);
-}
-
-if($MaxVersion) {
-    exit(2) unless _is_greater_than_or_equal($MaxVersion, $o->pkg_version);
 }
 
 if($o->print_variables) {
@@ -1093,6 +1122,7 @@ Compare to:
     if($o->errmsg) {
         #handle error
     } else {
+        my $prefix = $o->get_var('prefix');
         my @cflags = $o->get_cflags;
         my @ldflags = $o->get_ldflags;
     }
@@ -1304,6 +1334,10 @@ The version of the package
 
 Returns a list of compiler and linker flags, respectively.
 
+=head4 I<< $o->get_var($name) >>
+
+Get the variable with the given name.
+
 =head4 I<< PkgConfig->Guess >>
 
 This is a class method, and will replace the hard-coded default linker and include
@@ -1383,12 +1417,26 @@ package itself (without dependencies).
 
 =head1 SEE ALSO
 
-L<ExtUtils::PkgConfig>, a wrapper around the C<pkg-config> binary
+=over 4
 
-L<pkg-config|http://www.freedesktop.org/wiki/Software/pkg-config>
+=item L<pkg-config|http://www.freedesktop.org/wiki/Software/pkg-config>
 
-L<http://www.openbsd.org/cgi-bin/cvsweb/src/usr.bin/pkg-config/> another 
-perl implementation of pkg-config
+The original C implementation
+
+=item L<ExtUtils::PkgConfig>
+
+A wrapper around the C<pkg-config> binary that can be used in your C<Makefile.PL>
+or C<Build.PL>.
+
+=item L<http://www.openbsd.org/cgi-bin/cvsweb/src/usr.bin/pkg-config/>
+
+Another perl implementation of pkg-config
+
+=item L<pkgconf|https://github.com/pkgconf/pkgconf>
+
+An alternative C implementation
+
+=back
 
 =head1 AUTHOR
 
