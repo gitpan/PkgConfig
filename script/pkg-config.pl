@@ -7,18 +7,20 @@
 # You may use and distribute this software under the same terms and conditions
 # as Perl itself.
 
-package PkgConfig::Vars;
+package
+    PkgConfig::Vars;
 # this is a namespace for .pc files to hold their variables without
 # relying on lexical scope.
 
-package PkgConfig::UDefs;
+package
+    PkgConfig::UDefs;
 # This namespace provides user-defined variables which are to override any
 # declarations within the .pc file itself.
 
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07620_01';
+our $VERSION = '0.07720';
 
 require 5.006;
 
@@ -1379,6 +1381,10 @@ Example, install all script names:
 Example, don't install any scripts:
 
  % perl Makefile.PL --script none
+
+You can also set the environment variable PERL_PKG_CONFIG_SCRIPTS to the
+desired --script value (separating each script name with a comma C<,>) to
+ensure that upgrades of PkgConfig do the same.
 
 =head2 CAVEATS
 
