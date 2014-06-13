@@ -20,7 +20,7 @@ package
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.07720';
+our $VERSION = '0.07820';
 
 require 5.006;
 
@@ -1248,8 +1248,8 @@ C<--silence-errors>
 
 =head3 ENVIRONMENT
 
-the C<PKG_CONFIG_PATH> variable is honored and used as a colon-delimited list
-of directories with contain C<.pc> files.
+the C<PKG_CONFIG_PATH> variable is honored and used as a colon-delimited 
+(semicolon-delimited on Windows) list of directories with contain C<.pc> files.
 
 =head2 MODULE OPTIONS
 
@@ -1441,6 +1441,14 @@ Another perl implementation of pkg-config
 =item L<pkgconf|https://github.com/pkgconf/pkgconf>
 
 An alternative C implementation
+
+=item L<pkg-config|https://github.com/ruby-gnome2/pkg-config>
+
+Pure Ruby implementation.
+
+=item L<pykg-config|https://pypi.python.org/pypi/pykg-config/1.2.0>
+
+A Python implementation.
 
 =back
 
