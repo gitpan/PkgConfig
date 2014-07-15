@@ -20,7 +20,7 @@ package
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.08220';
+our $VERSION = '0.08220_01';
 
 require 5.006;
 
@@ -376,6 +376,10 @@ struct(
      'print_variable' => '$',
      'print_values' => '$',
      'defined_variables' => '*%',
+     
+     # for creating PkgConfig objects with identical
+     # settings
+     'original' => '$',
     ]
 );
 
@@ -455,6 +459,8 @@ sub find {
         ['exclude_cflags', \@DEFAULT_EXCLUDE_CFLAGS]
     );
     
+    my %original = %options;
+    
     foreach (@uspecs) {
         my ($basekey,$default) = @$_;
         my $list = [ @{$options{$basekey} ||= [] } ];
@@ -471,6 +477,7 @@ sub find {
     $VarClassSerial++;
     $options{varclass} = sprintf("PkgConfig::Vars::SERIAL_%d", $VarClassSerial);
     $options{udefclass} = sprintf("PkgConfig::UDefs::SERIAL_%d", $VarClassSerial);
+    $options{original} = \%original;
     
     
     my $udefs = delete $options{VARS} || {};
@@ -712,11 +719,14 @@ sub parse_pcfile {
         $self->pkg_description( $self->_pc_var('description') );
         $self->pkg_exists(1);        
     }
-    
+
     unless ($self->no_recurse) {
         foreach (@deps) {
             my ($dep,$cmp_op,$version) = @$_;
-            $self->find_pcfile($dep);
+            $dep = "$dep $cmp_op $version" if defined $cmp_op;
+            my $other = PkgConfig->find($dep, %{ $self->original });
+            $self->append_cflags(  $other->get_cflags );
+            $self->append_ldflags( $other->get_ldflags );
         }
     }
 }

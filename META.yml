@@ -18,9 +18,15 @@ no_index:
   directory:
     - t
     - inc
+provides:
+  PkgConfig:
+    file: lib/PkgConfig.pm
+    version: 0.08220_01
 requires:
   Test::More: '0.94'
   perl: '5.006000'
 resources:
+  bugtracker: https://github.com/mnunberg/perl-PkgConfig/issues
+  homepage: https://metacpan.org/pod/PkgConfig
   repository: https://github.com/mnunberg/perl-PkgConfig.git
-version: '0.08220'
+version: 0.08220_01
