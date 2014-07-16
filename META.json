@@ -41,7 +41,7 @@
    "provides" : {
       "PkgConfig" : {
          "file" : "lib/PkgConfig.pm",
-         "version" : "0.08220_01"
+         "version" : "0.08220_02"
       }
    },
    "release_status" : "testing",
@@ -56,5 +56,5 @@
          "web" : "https://github.com/mnunberg/perl-PkgConfig"
       }
    },
-   "version" : "0.08220_01"
+   "version" : "0.08220_02"
 }

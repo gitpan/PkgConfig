@@ -85,5 +85,6 @@ win32/fix_old_strawberry.pl
 t/dep_no_inherit_vars.t
 t/dep_no_inherit_vars/lib/pkgconfig/nspr.pc
 t/dep_no_inherit_vars/lib/pkgconfig/nss.pc
+t/dep_no_inherit_vars/lib/pkgconfig/foo.pc
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)

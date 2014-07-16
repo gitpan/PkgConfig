@@ -20,7 +20,7 @@ package
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.08220_01';
+our $VERSION = '0.08220_02';
 
 require 5.006;
 
@@ -725,6 +725,10 @@ sub parse_pcfile {
             my ($dep,$cmp_op,$version) = @$_;
             $dep = "$dep $cmp_op $version" if defined $cmp_op;
             my $other = PkgConfig->find($dep, %{ $self->original });
+            if($other->errmsg) {
+                $self->errmsg($other->errmsg);
+                last;
+            }
             $self->append_cflags(  $other->get_cflags );
             $self->append_ldflags( $other->get_ldflags );
         }
@@ -1531,6 +1535,8 @@ A Python implementation.
 Other contributors include:
 
 =over 4
+
+=item Vladimir Timofeev (vovkasm)
 
 =item kmx
 
