@@ -20,7 +20,7 @@ package
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.08320';
+our $VERSION = '0.08320_01';
 
 require 5.006;
 
@@ -32,6 +32,7 @@ use File::Glob 'bsd_glob';
 use Class::Struct; #in core since 5.004
 use Data::Dumper;
 use File::Basename qw( dirname );
+use Text::ParseWords qw( shellwords );
 
 our $UseDebugging;
 
@@ -410,6 +411,10 @@ sub _pc_var {
     return $$glob;
 }
 
+sub _quote_cvt($)  {
+    join ' ', map { s/(\s|"|')/\\$1/g; $_ } shellwords(shift)
+}
+
 sub assign_var {
     my ($self,$field,$value) = @_;
     no strict 'refs';
@@ -419,7 +424,7 @@ sub assign_var {
         log_debug("Prefix already defined by user");
         return;
     }
-    my $evalstr = sprintf('$%s = %s',
+    my $evalstr = sprintf('$%s = PkgConfig::_quote_cvt(%s)',
                     $self->_get_pc_varname($field), $value);
     
     log_debug("EVAL", $evalstr);
@@ -615,7 +620,7 @@ sub get_requires {
 sub parse_line {
     my ($self,$line,$evals) = @_;
     no strict 'vars';
-    
+
     $line =~ s/#[^#]+$//g; # strip comments
     return unless $line;
     
@@ -656,14 +661,17 @@ sub parse_line {
     
     $value =~ s/\$\{/\$\{$varclass\::/g;
     
+    # preserve quoted space
+    $value = join ' ', map { s/(["'])/\\$1/g; "'$_'" } shellwords $value
+      if $value =~ /[\\"']/;
+    
     #quoute the value string, unless quouted already
-    $value = "\"$value\"" unless $value =~ /^["']/;
+    $value = "\"$value\"";
     
     #get existent variables from our hash:
     
     
-    $value =~ s/'/"/g; #allow for interpolation
-    
+    #$value =~ s/'/"/g; #allow for interpolation
     $self->assign_var($field, $value);
     
 }
@@ -845,7 +853,7 @@ sub _split_flags {
     if(@flags == 1) {
         my $str = shift @flags;
         return () if !$str;
-        @flags = split(/\s+/, $str);
+        @flags = map { s/\\(\s)/$1/g; $_ } split(/(?<!\\)\s+/, $str);
     }
     @flags = grep $_, @flags;
     return @flags;
