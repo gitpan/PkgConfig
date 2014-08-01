@@ -20,7 +20,7 @@ package
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.08320_01';
+our $VERSION = '0.08320_02';
 
 require 5.006;
 
@@ -786,13 +786,17 @@ sub find_pcfile {
 ################################################################################
 ################################################################################
 
+sub _return_context (@) {
+    wantarray ? (@_) : join(' ', map { s/(\s|['"])/\\$1/g; $_ } @_)
+}
+
 sub get_cflags {
     my $self = shift;
     my @cflags = @{$self->cflags};
 
     filter_omit(\@cflags, $self->exclude_cflags);
     filter_dups(\@cflags);
-    return @cflags;
+    _return_context @cflags;
 }
 
 sub get_ldflags {
@@ -812,7 +816,7 @@ sub get_ldflags {
     @ret = reverse @ret;
     filter_dups(\@ret);
     @ret = reverse(@ret);
-    return @ret;
+    _return_context @ret;
 }
 
 sub get_var {
@@ -853,7 +857,8 @@ sub _split_flags {
     if(@flags == 1) {
         my $str = shift @flags;
         return () if !$str;
-        @flags = map { s/\\(\s)/$1/g; $_ } split(/(?<!\\)\s+/, $str);
+        #@flags = map { s/\\(\s)/$1/g; $_ } split(/(?<!\\)\s+/, $str);
+        @flags = shellwords $str;
     }
     @flags = grep $_, @flags;
     return @flags;
@@ -1158,7 +1163,7 @@ if($PrintLibsOnlyl or ($PrintLibsOnlyl and $PrintLibsOnlyL)) {
     @print_flags = grep /^-[LR]/, $o->get_ldflags;
 }
 
-print $_, " " for @print_flags;
+print scalar PkgConfig::_return_context(@print_flags);
 print "\n";
 exit(0);
 
@@ -1412,7 +1417,15 @@ The version of the package
 
 =head4 I<< $o->get_ldflags >>
 
-Returns a list of compiler and linker flags, respectively.
+Returns compiler and linker flags, respectively.
+
+In list context, these methods return a list with each argument split on
+unescaped spaces.
+
+In list context returns a list of compiler and linker flags, respectively.
+
+In scalar context returns a string of compiler and linker flags with spaces
+and quotes escaped correctly.
 
 =head4 I<< $o->get_var($name) >>
 
