@@ -1,9 +1,9 @@
 use strict;
 use warnings;
+use 5.006;
 use ExtUtils::MakeMaker 6.56;
 use Getopt::Long;
 use Config;
-require 5.006;
 
 ### Makefile.PL commandline params
 # e.g. Makefile.PL --script=ppkg-config --script=pkg-config
@@ -58,8 +58,6 @@ else {
   }
 }
 
-eval { require Test::More }; # to get $Test::More::VERSION
-
 WriteMakefile(
     NAME                => 'PkgConfig',
     AUTHOR              => q{M. Nunberg <mnunberg@haskalah.org>},
@@ -70,12 +68,12 @@ WriteMakefile(
     PL_FILES            => {},
     EXE_FILES           => \@scripts,
     PREREQ_PM => {
-        # subtest Test::More >= 0.90 && Test::More != 0.92
         'Test::More' => '0.94',
     },
     BUILD_REQUIRES => {
-        'Archive::Tar' => $^O eq 'MSWin32' ? '1.94' : 0,
-        'Fcntl' => 0
+        'Archive::Tar'        => $^O eq 'MSWin32' ? '1.94' : 0,
+        'Fcntl'               => 0,
+        'ExtUtils::MakeMaker' => '6.56',
     },
     META_MERGE => {
         'meta-spec' => { version => 2 },

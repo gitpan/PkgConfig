@@ -23,6 +23,7 @@
       "build" : {
          "requires" : {
             "Archive::Tar" : "0",
+            "ExtUtils::MakeMaker" : "6.56",
             "Fcntl" : "0"
          }
       },
@@ -41,7 +42,7 @@
    "provides" : {
       "PkgConfig" : {
          "file" : "lib/PkgConfig.pm",
-         "version" : "0.08320_02"
+         "version" : "0.08320_03"
       }
    },
    "release_status" : "testing",
@@ -56,5 +57,5 @@
          "web" : "https://github.com/mnunberg/perl-PkgConfig"
       }
    },
-   "version" : "0.08320_02"
+   "version" : "0.08320_03"
 }
