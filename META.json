@@ -42,10 +42,10 @@
    "provides" : {
       "PkgConfig" : {
          "file" : "lib/PkgConfig.pm",
-         "version" : "0.08320_03"
+         "version" : "0.08420"
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "web" : "https://github.com/mnunberg/perl-PkgConfig/issues"
@@ -57,5 +57,5 @@
          "web" : "https://github.com/mnunberg/perl-PkgConfig"
       }
    },
-   "version" : "0.08320_03"
+   "version" : "0.08420"
 }

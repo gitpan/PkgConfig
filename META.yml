@@ -22,7 +22,7 @@ no_index:
 provides:
   PkgConfig:
     file: lib/PkgConfig.pm
-    version: 0.08320_03
+    version: '0.08420'
 requires:
   Test::More: '0.94'
   perl: '5.006000'
@@ -30,4 +30,4 @@ resources:
   bugtracker: https://github.com/mnunberg/perl-PkgConfig/issues
   homepage: https://metacpan.org/pod/PkgConfig
   repository: https://github.com/mnunberg/perl-PkgConfig.git
-version: 0.08320_03
+version: '0.08420'
