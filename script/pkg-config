@@ -20,7 +20,7 @@ package
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.08420';
+our $VERSION = '0.08526';
 
 use strict;
 use warnings;
@@ -71,6 +71,10 @@ our @DEFAULT_SEARCH_PATH = qw(
 if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
 
     # use the defaults regardless of detected platform
+
+} elsif($ENV{PKG_CONFIG_LIBDIR}) {
+
+    @DEFAULT_SEARCH_PATH = split $Config{path_sep}, $ENV{PKG_CONFIG_LIBDIR};
 
 } elsif($^O =~ /^(gnukfreebsd|linux)$/ && -r "/etc/debian_version") {
 
@@ -206,12 +210,46 @@ if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
         $path =~ s{\\}{/}g;
         @DEFAULT_SEARCH_PATH = $path;
     }
+    
+    my @reg_paths;
+    
+    eval q{
+        package
+            PkgConfig::WinReg;
+        
+        use Win32API::Registry 0.21 qw( :ALL );
+        
+        foreach my $top (HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER) {
+            my $key;
+            RegOpenKeyEx( $top, "Software\\\\pkgconfig\\\\PKG_CONFIG_PATH", 0, KEY_READ, $key) || next;
+            my $nlen = 1024;
+            my $pos = 0;
+            my $name = '';
+            
+            while(RegEnumValue($key, $pos++, $name, $nlen, [], [], [], [])) {
+                my $type;
+                my $data;
+                RegQueryValueEx($key, $name, [], $type, $data, []);
+                push @reg_paths, $data;
+            }
+            
+            RegCloseKey( $key );
+        }
+    };
+    
+    unless($@) {
+        unshift @DEFAULT_SEARCH_PATH, @reg_paths;
+    }
 
 }
 
 my @ENV_SEARCH_PATH = split($Config{path_sep}, $ENV{PKG_CONFIG_PATH} || "");
 
 unshift @DEFAULT_SEARCH_PATH, @ENV_SEARCH_PATH;
+
+if($^O eq 'MSWin32') {
+  @DEFAULT_SEARCH_PATH = map { s{\\}{/}g; $_ } map { /\s/ ? Win32::GetShortPathName($_) : $_ } @DEFAULT_SEARCH_PATH;
+}
 
 our @DEFAULT_EXCLUDE_CFLAGS = qw(-I/usr/include -I/usr/local/include);
 # don't include default link/search paths!
@@ -270,6 +308,13 @@ if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
     }
 }
 
+if($ENV{PKG_CONFIG_ALLOW_SYSTEM_CFLAGS}) {
+    @DEFAULT_EXCLUDE_CFLAGS = ();
+}
+
+if($ENV{PKG_CONFIG_ALLOW_SYSTEM_LIBS}) {
+    @DEFAULT_EXCLUDE_LFLAGS = ();
+}
 
 my $LD_OUTPUT_RE = qr/
     SEARCH_DIR\("
@@ -1328,8 +1373,37 @@ C<--silence-errors>
 
 =head3 ENVIRONMENT
 
-the C<PKG_CONFIG_PATH> variable is honored and used as a colon-delimited 
-(semicolon-delimited on Windows) list of directories with contain C<.pc> files.
+the C<PKG_CONFIG_PATH> and C<PKG_CONFIG_LIBDIR> variables are honored and used
+as a colon-delimited (semicolon-delimited on Windows) list of directories with
+contain C<.pc> files.
+
+Other environment variables recongized by both C<pkg-config> and L<PkgConfig>
+include:
+
+=over 4
+
+=item PKG_CONFIG_ALLOW_SYSTEM_CFLAGS
+
+=item PKG_CONFIG_ALLOW_SYSTEM_LIBS
+
+=back
+
+If L<Win32API::Registry> is installed, on Windows (but not Cygwin) L<PkgConfig>
+will also consult these registry keys.  The names are ignored, but the values
+are paths containing C<.pc> files.
+
+=over 4
+
+=item HKEY_CURRENT_USER\Software\pkgconfig\PKG_CONFIG_PATH
+
+=item HKEY_LOCAL_MACHINE\Software\pkgconfig\PKG_CONFIG_PATH
+
+=back
+
+Registry support should be considered somewhat experimental, subject to change
+in the future, though not without good reason.  The rationale for this caveat
+is that this feature is documented in several places, but I have yet to find
+a working version that implements this feature.
 
 =head2 MODULE OPTIONS
 
