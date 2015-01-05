@@ -20,7 +20,7 @@ package
 package PkgConfig;
 
 #First two digits are Perl version, second two are pkg-config version
-our $VERSION = '0.08526';
+our $VERSION = '0.08626';
 
 use strict;
 use warnings;
@@ -67,6 +67,10 @@ our @DEFAULT_SEARCH_PATH = qw(
     /usr/lib/pkgconfig /usr/share/pkgconfig
 
 );
+
+our @DEFAULT_EXCLUDE_CFLAGS = qw(-I/usr/include -I/usr/local/include);
+# don't include default link/search paths!
+our @DEFAULT_EXCLUDE_LFLAGS = map { ( "-L$_", "-R$_" ) } qw( /lib /lib32 /lib64 /usr/lib /usr/lib32 /usr/lib/64 /usr/local/lib /usr/local/lib32 /usr/local/lib64 );
 
 if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
 
@@ -118,6 +122,11 @@ if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
                 "/usr/lib/pkgconfig",
                 "/usr/share/pkgconfig",
             );
+
+            push @DEFAULT_EXCLUDE_LFLAGS, map { ("-L$_", "-R$_") } 
+                "/usr/local/lib/$arch",
+                "/usr/lib/$arch";
+
         } else {
         
             @DEFAULT_SEARCH_PATH = (
@@ -129,7 +138,7 @@ if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
                 "/usr/share/pkgconfig",
             );
         }
-    
+        
     } else {
 
         @DEFAULT_SEARCH_PATH = (
@@ -241,32 +250,6 @@ if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
         unshift @DEFAULT_SEARCH_PATH, @reg_paths;
     }
 
-}
-
-my @ENV_SEARCH_PATH = split($Config{path_sep}, $ENV{PKG_CONFIG_PATH} || "");
-
-unshift @DEFAULT_SEARCH_PATH, @ENV_SEARCH_PATH;
-
-if($^O eq 'MSWin32') {
-  @DEFAULT_SEARCH_PATH = map { s{\\}{/}g; $_ } map { /\s/ ? Win32::GetShortPathName($_) : $_ } @DEFAULT_SEARCH_PATH;
-}
-
-our @DEFAULT_EXCLUDE_CFLAGS = qw(-I/usr/include -I/usr/local/include);
-# don't include default link/search paths!
-our @DEFAULT_EXCLUDE_LFLAGS = qw(
-    -L/usr/lib -L/lib -L/lib64 -L/lib32
-    -L/usr/lib32 -L/usr/lib64
-    -L/usr/local/lib
-    
-    -R/lib -R/usr/lib -R/usr/lib64 -R/lib32 -R/lib64 -R/usr/local/lib
-);
-
-if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
-
-    # use the defaults regardless of detected platform
-
-} elsif($^O eq 'MSWin32') {
-
     if($Config::Config{cc} =~ /cl(\.exe)?$/i)
     {
         @DEFAULT_EXCLUDE_LFLAGS = ();
@@ -306,6 +289,14 @@ if($ENV{PKG_CONFIG_NO_OS_CUSTOMIZATION}) {
             "-I$path/lib/pkgconfig/../../include",
         );
     }
+}
+
+my @ENV_SEARCH_PATH = split($Config{path_sep}, $ENV{PKG_CONFIG_PATH} || "");
+
+unshift @DEFAULT_SEARCH_PATH, @ENV_SEARCH_PATH;
+
+if($^O eq 'MSWin32') {
+  @DEFAULT_SEARCH_PATH = map { s{\\}{/}g; $_ } map { /\s/ ? Win32::GetShortPathName($_) : $_ } @DEFAULT_SEARCH_PATH;
 }
 
 if($ENV{PKG_CONFIG_ALLOW_SYSTEM_CFLAGS}) {
@@ -1036,10 +1027,12 @@ GetOptions(
     'libs' => \my $PrintLibs,
     'libs-only-L' => \my $PrintLibsOnlyL,
     'libs-only-l' => \my $PrintLibsOnlyl,
+    'libs-only-other' => \my $PrintLibsOnlyOther,
     'list-all' => \my $ListAll,
     'static' => \my $UseStatic,
     'cflags' => \my $PrintCflags,
     'cflags-only-I' => \my $PrintCflagsOnlyI,
+    'cflags-only-other' => \my $PrintCflagsOnlyOther,
     'exists' => \my $PrintExists,
     'atleast-version=s' => \my $AtLeastVersion,
     'exact-version=s'   => \my $ExactVersion,
@@ -1083,7 +1076,7 @@ if($GuessPaths) {
 }
 
 if($PrintAPIversion) {
-    print "0.20\n";
+    print "0.26\n";
     exit(0);
 }
 
@@ -1101,7 +1094,7 @@ if($SilenceErrors) {
     $quiet_errors = 1;
 }
 
-my $WantFlags = ($PrintCflags || $PrintLibs || $PrintLibsOnlyL || $PrintCflagsOnlyI || $PrintLibsOnlyl || $PrintVersion);
+my $WantFlags = ($PrintCflags || $PrintLibs || $PrintLibsOnlyL || $PrintCflagsOnlyI || $PrintCflagsOnlyOther || $PrintLibsOnlyOther || $PrintLibsOnlyl || $PrintVersion);
 
 if($WantFlags) {
     $quiet_errors = 0 unless $SilenceErrors;
@@ -1191,8 +1184,16 @@ if($PrintCflagsOnlyI) {
     @print_flags = grep /^-I/, $o->get_cflags;
 }
 
+if($PrintCflagsOnlyOther) {
+    @print_flags = grep /^-[^I]/, $o->get_cflags;
+}
+
 if($PrintLibs) {
     @print_flags = $o->get_ldflags;
+}
+
+if ($PrintLibsOnlyOther) {
+    @print_flags = grep /^-[^LRl]/, $o->get_ldflags;
 }
 
 # handle --libs-only-L and --libs-only-l but watch the case when
@@ -1292,6 +1293,11 @@ Prints -L/-R part of "--libs". It defines library search path but without librar
 
 Prints the -l part of "--libs".
 
+=head4 --libs-only-other
+
+Prints the part of "--libs" not covered by "--libs-only-L"
+and "--libs-only-l", such as "--pthread".
+
 =head4 --list-all
 
 List all know packages.
@@ -1303,6 +1309,10 @@ List all know packages.
 =head4 --cflags-only-I
 
 Prints the -I part of "--cflags"
+
+=head4 --cflags-only-other
+
+Prints the parts of "--cflags" not covered by "--cflags-only-I".
 
 =head4 --modversion
 
@@ -1633,6 +1643,8 @@ Other contributors include:
 =item kmx
 
 =item Sanel Zukan
+
+=item Breno G. de Oliveira (garu)
 
 =back
 
